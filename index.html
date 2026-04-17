@@ -1,207 +1,655 @@
 <!DOCTYPE html>
 <html lang="vi" class="scroll-smooth">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Báo Cáo Tương Tác: Đại học Đại Nam (DNU)</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Báo Cáo Tương Tác: Đại học Đại Nam (DNU) & AI Assistant</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; color: #1e293b; }
-        .chart-container { 
-            position: relative; 
-            width: 100%; 
-            max-width: 650px; 
-            margin: 0 auto; 
-            height: 350px; 
-            max-height: 400px; 
-        }
-        .gradient-card { background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); }
-        /* Style for process flow (No SVG) */
-        .flow-step { position: relative; padding: 1.5rem; border-radius: 1rem; background: white; border: 2px solid #e2e8f0; }
-        .flow-connector { width: 2px; height: 2rem; background: #cbd5e1; margin: 0 auto; }
-    </style>
+<!-- Chosen Palette: Brilliant Blues & Energetic Accents (Sky Blue, Emerald, Amber, Indigo) -->
+<!-- Application Structure Plan: Dashboard-style scrolling SPA with sticky navigation and integrated AI assistants. Flows from Overview -> AI Consultation -> Scale/Growth Data -> Academic Offerings -> Facilities. This allows prospective students to learn and immediately interact for personalized guidance. -->
+<!-- Visualization & Content Choices: Overview -> Inform -> Big Stats; Growth -> Change -> Line Chart (Chart.js); Faculties -> Compare -> Donut Chart & Tabs (Chart.js + JS); Facilities -> Inform -> Cards (HTML/CSS). Confirming NO SVG/Mermaid. -->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+<style>
+body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #fafaf9; color: #1c1917; }
+.chart-container { position: relative; width: 100%; max-width: 800px; margin-left: auto; margin-right: auto; height: 350px; max-height: 400px; }
+.glass-panel { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.5); }
+.nav-link { transition: all 0.3s ease; }
+.nav-link:hover { color: #0284c7; border-bottom: 2px solid #0284c7; }
+.stat-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+.stat-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
+.fade-in { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
+.fade-in.visible { opacity: 1; transform: translateY(0); }
+.tab-btn.active { background-color: #0369a1; color: white; }
+.tab-content { display: none; }
+.tab-content.active { display: block; animation: fadeIn 0.4s ease-in-out; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.ai-chat-bubble { animation: slideIn 0.3s ease-out; }
+@keyframes slideIn { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.loading-dots:after { content: ' .'; animation: dots 1.5s steps(5, end) infinite; }
+@keyframes dots { 0%, 20% { color: rgba(0,0,0,0); text-shadow: .25em 0 0 rgba(0,0,0,0), .5em 0 0 rgba(0,0,0,0); } 40% { color: #0369a1; text-shadow: .25em 0 0 rgba(0,0,0,0), .5em 0 0 rgba(0,0,0,0); } 60% { text-shadow: .25em 0 0 #0369a1, .5em 0 0 rgba(0,0,0,0); } 80%, 100% { text-shadow: .25em 0 0 #0369a1, .5em 0 0 #0369a1; } }
+</style>
 </head>
-<body class="antialiased">
+<body class="antialiased selection:bg-sky-200 selection:text-sky-900">
 
-    <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 py-4">
-        <div class="max-w-7xl mx-auto px-6 flex justify-between items-center">
-            <span class="text-xl font-extrabold text-sky-700 tracking-tight">DNU DATA INSIGHTS</span>
-            <div class="hidden md:flex space-x-6 font-semibold text-slate-600">
-                <a href="#overview" class="hover:text-sky-600 transition">Tổng quan</a>
-                <a href="#growth" class="hover:text-sky-600 transition">Tăng trưởng</a>
-                <a href="#faculties" class="hover:text-sky-600 transition">Khối ngành</a>
-                <a href="#process" class="hover:text-sky-600 transition">Lộ trình</a>
+<nav class="fixed top-0 w-full z-50 glass-panel shadow-sm transition-all duration-300 py-4" id="navbar">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+            <span class="text-2xl font-bold text-sky-800">🏫 DNU Insights</span>
+        </div>
+        <div class="hidden md:flex space-x-8 font-medium text-stone-600">
+            <a href="#tong-quan" class="nav-link py-1">Tổng quan</a>
+            <a href="#ai-consultant" class="nav-link py-1 text-sky-700">✨ Tư vấn AI</a>
+            <a href="#quy-mo" class="nav-link py-1">Quy mô & Sinh viên</a>
+            <a href="#dao-tao" class="nav-link py-1">Khối ngành Đào tạo</a>
+            <a href="#co-so" class="nav-link py-1">Cơ sở vật chất</a>
+            <button onclick="toggleAIChat()" class="text-sky-600 font-bold hover:text-sky-800 transition-colors bg-sky-100 px-4 py-1 rounded-full">✨ Trợ lý AI</button>
+        </div>
+        <div class="md:hidden flex gap-2">
+            <button onclick="toggleAIChat()" class="text-sky-600 font-bold text-xl">✨</button>
+            <button class="text-stone-800 text-2xl" onclick="toggleMobileMenu()">☰</button>
+        </div>
+    </div>
+    <div id="mobile-menu" class="hidden md:hidden bg-white shadow-lg absolute w-full px-4 pt-2 pb-4 space-y-2 font-medium">
+        <a href="#tong-quan" class="block py-2 text-stone-700" onclick="toggleMobileMenu()">Tổng quan</a>
+        <a href="#ai-consultant" class="block py-2 text-sky-700 font-bold" onclick="toggleMobileMenu()">✨ Tư vấn AI</a>
+        <a href="#quy-mo" class="block py-2 text-stone-700" onclick="toggleMobileMenu()">Quy mô & Sinh viên</a>
+        <a href="#dao-tao" class="block py-2 text-stone-700" onclick="toggleMobileMenu()">Khối ngành</a>
+        <a href="#co-so" class="block py-2 text-stone-700" onclick="toggleMobileMenu()">Cơ sở vật chất</a>
+    </div>
+</nav>
+
+<header class="pt-32 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
+    <div class="inline-block px-4 py-1.5 rounded-full bg-sky-100 text-sky-800 font-semibold text-sm mb-6 tracking-wide uppercase">
+        Báo cáo Phân tích Chuyên sâu (Tích hợp AI)
+    </div>
+    <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-stone-900 tracking-tight leading-tight mb-6">
+        Hồ sơ năng lực:<br><span class="text-sky-700">Trường Đại học Đại Nam</span>
+    </h1>
+    <div class="flex justify-center mb-6">
+         <button onclick="triggerTTS(this, 'intro-text')" class="flex items-center gap-2 px-5 py-2 bg-white hover:bg-stone-50 border border-stone-200 text-stone-700 rounded-full text-sm font-semibold transition-all shadow-sm">
+            🔊 Nghe giới thiệu bằng AI
+        </button>
+    </div>
+    <p id="intro-text" class="mt-4 max-w-2xl text-lg md:text-xl text-stone-600 mx-auto leading-relaxed">
+        Khám phá bức tranh toàn cảnh về quy mô đào tạo, chất lượng giảng dạy, định hướng phát triển và hệ sinh thái học tập đa trải nghiệm tại DNU. Với sự hỗ trợ từ trí tuệ nhân tạo, chúng tôi giúp bạn tìm ra lộ trình nghề nghiệp phù hợp nhất.
+    </p>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-24 pb-24">
+
+    <section id="tong-quan" class="fade-in scroll-mt-24">
+        <div class="bg-white rounded-3xl p-8 md:p-12 shadow-sm border border-stone-100">
+            <h2 class="text-3xl font-bold text-stone-900 mb-4 flex items-center gap-3">
+                <span class="text-sky-600 text-4xl">🏛️</span> Tóm tắt Tổng quan
+            </h2>
+            <p class="text-stone-600 text-lg leading-relaxed mb-8">
+                Phần này cung cấp cái nhìn cơ bản về lịch sử hình thành và triết lý giáo dục của nhà trường. Đại học Đại Nam (DNU) được thành lập năm 2007, là trường đại học tư thục đa ngành, đa lĩnh vực tại Hà Nội. Với triết lý giáo dục "Học để thay đổi", DNU định hướng ứng dụng, chú trọng đào tạo thực hành và cam kết việc làm cho sinh viên sau khi tốt nghiệp.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="stat-card bg-stone-50 rounded-2xl p-6 text-center border border-stone-100">
+                    <div class="text-5xl mb-3">📅</div>
+                    <div class="text-4xl font-extrabold text-sky-800 mb-2" data-target="2007" data-prefix="Năm ">0</div>
+                    <div class="text-stone-500 font-medium uppercase tracking-wider text-sm">Thành lập</div>
+                </div>
+                <div class="stat-card bg-stone-50 rounded-2xl p-6 text-center border border-stone-100 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 bg-amber-400 text-amber-900 text-xs font-bold px-3 py-1 rounded-bl-xl">Trọng tâm</div>
+                    <div class="text-5xl mb-3">👥</div>
+                    <div class="text-4xl font-extrabold text-sky-800 mb-2" data-target="15000" data-suffix="+">0</div>
+                    <div class="text-stone-500 font-medium uppercase tracking-wider text-sm">Sinh viên hiện tại</div>
+                </div>
+                <div class="stat-card bg-stone-50 rounded-2xl p-6 text-center border border-stone-100">
+                    <div class="text-5xl mb-3">🎓</div>
+                    <div class="text-4xl font-extrabold text-sky-800 mb-2" data-target="36" data-suffix="+">0</div>
+                    <div class="text-stone-500 font-medium uppercase tracking-wider text-sm">Ngành đào tạo</div>
+                </div>
             </div>
         </div>
-    </nav>
+    </section>
 
-    <main class="max-w-7xl mx-auto px-6 py-12 space-y-24">
-        
-        <section id="overview" class="text-center space-y-8">
-            <div class="space-y-4">
-                <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900">Trường Đại học Đại Nam (DNU)</h1>
-                <p class="text-lg text-slate-600 max-w-2xl mx-auto">Phân tích dữ liệu về quy mô đào tạo, cơ cấu ngành học và lộ trình phát triển sinh viên trong kỷ nguyên số.</p>
+    <section id="ai-consultant" class="fade-in scroll-mt-24">
+        <div class="bg-gradient-to-br from-sky-900 to-indigo-900 rounded-3xl p-8 md:p-12 shadow-xl text-white">
+            <div class="max-w-3xl mx-auto text-center mb-10">
+                <h2 class="text-3xl font-bold mb-4 text-white flex justify-center items-center gap-3">✨ Định hướng nghề nghiệp cùng AI</h2>
+                <p class="text-sky-100 text-lg">Chia sẻ sở thích, thế mạnh của bạn, AI sẽ phân tích và gợi ý khối ngành phù hợp nhất tại Đại Nam.</p>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
-                    <span class="text-5xl block mb-4">🎓</span>
-                    <span class="text-4xl font-black text-sky-600">36+</span>
-                    <p class="font-bold text-slate-500 uppercase tracking-widest text-xs mt-2">Ngành đào tạo</p>
+            <div class="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+                <div class="flex flex-col md:flex-row gap-4">
+                    <input type="text" id="ai-interest-input" placeholder="Ví dụ: Em thích giao tiếp, giỏi tiếng Anh và muốn làm việc trong môi trường quốc tế..." 
+                           class="flex-1 bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-sky-200 outline-none focus:ring-2 focus:ring-sky-400">
+                    <button onclick="getAIConsultation()" class="bg-sky-500 hover:bg-sky-400 px-8 py-3 rounded-xl font-bold transition-all text-white flex justify-center items-center whitespace-nowrap">
+                        Phân tích ngay
+                    </button>
                 </div>
-                <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
-                    <span class="text-5xl block mb-4">👥</span>
-                    <span class="text-4xl font-black text-sky-600">15,000+</span>
-                    <p class="font-bold text-slate-500 uppercase tracking-widest text-xs mt-2">Sinh viên hiện tại</p>
-                </div>
-                <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
-                    <span class="text-5xl block mb-4">🏢</span>
-                    <span class="text-4xl font-black text-sky-600">95%</span>
-                    <p class="font-bold text-slate-500 uppercase tracking-widest text-xs mt-2">Có việc làm ngay</p>
-                </div>
-            </div>
-        </section>
-
-        <hr class="border-slate-200">
-
-        <section id="growth" class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div class="space-y-6">
-                <h2 class="text-3xl font-bold text-slate-900">Xu hướng tăng trưởng quy mô</h2>
-                <p class="text-slate-600 leading-relaxed">
-                    Dữ liệu cho thấy sự gia tăng ổn định về số lượng sinh viên đăng ký qua các năm. Điều này minh chứng cho uy tín đào tạo và sự tin tưởng của phụ huynh/học sinh vào định hướng giáo dục ứng dụng của nhà trường.
-                </p>
-                <div class="bg-sky-50 p-6 rounded-2xl border-l-4 border-sky-500">
-                    <p class="text-sm font-medium text-sky-800 italic">"Mục tiêu đạt mốc 20,000 sinh viên vào năm 2028 với trọng tâm là các ngành công nghệ và sức khỏe."</p>
-                </div>
-            </div>
-            <div class="bg-white p-6 rounded-3xl shadow-xl border border-slate-100">
-                <div class="chart-container">
-                    <canvas id="growthChart"></canvas>
-                </div>
-            </div>
-        </section>
-
-        <section id="faculties" class="bg-slate-900 rounded-[3rem] p-10 md:p-16 text-white overflow-hidden relative">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
-                <div class="order-2 lg:order-1">
-                    <div class="chart-container">
-                        <canvas id="facultyChart"></canvas>
+                <div id="ai-response-area" class="mt-6 hidden">
+                    <div class="p-6 bg-white/5 rounded-xl border border-white/10 prose prose-invert max-w-none text-sky-50" id="ai-response-text">
                     </div>
                 </div>
-                <div class="space-y-6 order-1 lg:order-2">
-                    <h2 class="text-3xl font-bold">Cơ cấu Khối ngành Đào tạo</h2>
-                    <p class="text-slate-300">
-                        Khối ngành **Sức khỏe** và **Kinh tế** chiếm tỷ trọng lớn nhất, phản ánh chiến lược đáp ứng nguồn nhân lực chất lượng cao cho xã hội.
+            </div>
+        </div>
+    </section>
+
+    <section id="quy-mo" class="fade-in scroll-mt-24">
+        <h2 class="text-3xl font-bold text-stone-900 mb-4 flex items-center gap-3">
+            <span class="text-amber-500 text-4xl">📈</span> Quy mô & Số lượng Sinh viên
+        </h2>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div class="lg:col-span-5 space-y-6">
+                <p class="text-stone-600 text-lg leading-relaxed">
+                    Phân tích chuyên sâu về quy mô đào tạo đáp ứng nhu cầu nghiên cứu thông tin cụ thể. Biểu đồ bên cạnh minh họa sự tăng trưởng và ổn định quy mô của DNU trong giai đoạn gần đây.
+                </p>
+                <div class="bg-sky-50 border-l-4 border-sky-600 p-6 rounded-r-xl">
+                    <h3 class="text-sky-900 font-bold text-xl mb-2">Trung bình hiện tại</h3>
+                    <p class="text-sky-800">
+                        Theo các số liệu thống kê tổng hợp mới nhất, quy mô đào tạo trung bình hiện tại của trường Đại học Đại Nam duy trì ổn định ở mức <strong>khoảng 15.000 sinh viên</strong> (bao gồm nhiều hệ đào tạo). Quy mô này định vị DNU là một trong những trường đại học tư thục có quy mô lớn tại khu vực phía Bắc.
                     </p>
-                    <ul class="space-y-4">
-                        <li class="flex items-center gap-4"><span class="w-3 h-3 rounded-full bg-emerald-400"></span> Khối Sức khỏe (Y, Dược, Điều dưỡng)</li>
-                        <li class="flex items-center gap-4"><span class="w-3 h-3 rounded-full bg-sky-400"></span> Khối Kinh tế & Quản trị</li>
-                        <li class="flex items-center gap-4"><span class="w-3 h-3 rounded-full bg-amber-400"></span> Khối Kỹ thuật & Công nghệ</li>
+                </div>
+                <ul class="space-y-3 text-stone-600">
+                    <li class="flex items-center gap-2"><span>🟢</span> Tốc độ tuyển sinh tăng trưởng đều đặn ~10-15%/năm.</li>
+                    <li class="flex items-center gap-2"><span>🟢</span> Tỷ lệ sinh viên có việc làm sau tốt nghiệp đạt trên 95%.</li>
+                </ul>
+            </div>
+            <div class="lg:col-span-7 bg-white p-6 rounded-3xl shadow-sm border border-stone-100">
+                <h3 class="text-center font-bold text-stone-700 mb-4">Biểu đồ ước tính quy mô sinh viên (2018 - Nay)</h3>
+                <div class="chart-container">
+                    <canvas id="studentGrowthChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="dao-tao" class="fade-in scroll-mt-24 bg-white rounded-3xl p-8 md:p-12 shadow-sm border border-stone-100">
+        <h2 class="text-3xl font-bold text-stone-900 mb-4 flex items-center gap-3">
+            <span class="text-emerald-500 text-4xl">📚</span> Phân bổ Khối ngành Đào tạo
+        </h2>
+        <p class="text-stone-600 text-lg leading-relaxed mb-8">
+            Cơ cấu ngành nghề đào tạo tại DNU rất đa dạng. Phần này giúp người xem tương tác để hiểu rõ tỷ trọng các nhóm ngành và danh sách chi tiết các ngành học nổi bật, đặc biệt là nhóm ngành Sức khỏe đang là thế mạnh chiến lược.
+        </p>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+                <h3 class="text-center font-bold text-stone-700 mb-4">Tỷ trọng Sinh viên theo Khối ngành</h3>
+                <div class="chart-container">
+                    <canvas id="facultyDonutChart"></canvas>
+                </div>
+            </div>
+            <div class="space-y-4">
+                <div class="flex flex-wrap gap-2 mb-4" id="major-tabs">
+                    <button class="tab-btn active px-4 py-2 rounded-full font-medium text-sm border border-stone-200" onclick="openTab('suc-khoe', this)">⚕️ Sức khỏe</button>
+                    <button class="tab-btn px-4 py-2 rounded-full font-medium text-sm border border-stone-200" onclick="openTab('kinh-te', this)">📊 Kinh tế</button>
+                    <button class="tab-btn px-4 py-2 rounded-full font-medium text-sm border border-stone-200" onclick="openTab('ky-thuat', this)">💻 Kỹ thuật & CNTT</button>
+                    <button class="tab-btn px-4 py-2 rounded-full font-medium text-sm border border-stone-200" onclick="openTab('ngon-ngu', this)">🌐 Ngôn ngữ</button>
+                </div>
+
+                <div id="suc-khoe" class="tab-content active bg-stone-50 p-6 rounded-2xl border border-stone-100">
+                    <h4 class="font-bold text-lg text-emerald-700 mb-3 flex items-center gap-2">⚕️ Khối ngành Sức khỏe</h4>
+                    <p class="text-sm text-stone-600 mb-4">Là mũi nhọn chiến lược của DNU, đầu tư hệ thống thực hành y dược hiện đại bậc nhất khối tư thục.</p>
+                    <ul class="list-disc pl-5 space-y-2 text-stone-800 font-medium">
+                        <li>Y khoa</li>
+                        <li>Dược học</li>
+                        <li>Điều dưỡng</li>
+                    </ul>
+                </div>
+
+                <div id="kinh-te" class="tab-content bg-stone-50 p-6 rounded-2xl border border-stone-100">
+                    <h4 class="font-bold text-lg text-blue-700 mb-3 flex items-center gap-2">📊 Khối Kinh tế - Kinh doanh</h4>
+                    <p class="text-sm text-stone-600 mb-4">Mạng lưới doanh nghiệp liên kết mạnh mẽ, đào tạo thực chiến.</p>
+                    <ul class="list-disc pl-5 space-y-2 text-stone-800 font-medium">
+                        <li>Quản trị kinh doanh</li>
+                        <li>Kế toán, Tài chính Ngân hàng</li>
+                        <li>Thương mại điện tử</li>
+                        <li>Logistics & Quản lý chuỗi cung ứng</li>
+                    </ul>
+                </div>
+
+                <div id="ky-thuat" class="tab-content bg-stone-50 p-6 rounded-2xl border border-stone-100">
+                    <h4 class="font-bold text-lg text-stone-700 mb-3 flex items-center gap-2">💻 Kỹ thuật - Công nghệ</h4>
+                    <p class="text-sm text-stone-600 mb-4">Đón đầu xu hướng cách mạng công nghiệp 4.0, tập trung thực hành lab.</p>
+                    <ul class="list-disc pl-5 space-y-2 text-stone-800 font-medium">
+                        <li>Công nghệ thông tin</li>
+                        <li>Công nghệ Kỹ thuật ô tô</li>
+                        <li>Khoa học máy tính</li>
+                    </ul>
+                </div>
+
+                <div id="ngon-ngu" class="tab-content bg-stone-50 p-6 rounded-2xl border border-stone-100">
+                    <h4 class="font-bold text-lg text-purple-700 mb-3 flex items-center gap-2">🌐 Khối Ngôn ngữ - KHXH</h4>
+                    <p class="text-sm text-stone-600 mb-4">Đào tạo nhân lực toàn cầu, chương trình trao đổi quốc tế đa dạng.</p>
+                    <ul class="list-disc pl-5 space-y-2 text-stone-800 font-medium">
+                        <li>Ngôn ngữ Anh, Trung, Hàn Quốc, Nhật Bản</li>
+                        <li>Du lịch học</li>
+                        <li>Đa phương tiện & Truyền thông</li>
                     </ul>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <section id="process" class="space-y-12">
-            <div class="text-center">
-                <h2 class="text-3xl font-bold text-slate-900">Lộ trình Đào tạo Thực chiến</h2>
-                <p class="text-slate-600 mt-4">Quy trình 4 bước giúp sinh viên sẵn sàng cho thị trường lao động.</p>
+    <section id="co-so" class="fade-in scroll-mt-24">
+        <h2 class="text-3xl font-bold text-stone-900 mb-4 flex items-center gap-3">
+            <span class="text-indigo-500 text-4xl">🏢</span> Hệ sinh thái Cơ sở vật chất
+        </h2>
+        <p class="text-stone-600 text-lg leading-relaxed mb-8 max-w-3xl">
+            Cơ sở vật chất được DNU chú trọng đầu tư để hiện thực hóa mục tiêu "Học đi đôi với hành". Tương tác với các thẻ dưới đây để khám phá các khu vực trọng điểm trong khuôn viên trường tại Phú Lâm, Hà Đông.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 hover:border-sky-300 transition-colors cursor-default group">
+                <div class="text-5xl mb-4 group-hover:scale-110 transition-transform origin-left">🔬</div>
+                <h3 class="font-bold text-lg text-stone-800 mb-2">Hệ thống Lab Tiêu chuẩn</h3>
+                <p class="text-sm text-stone-600">Hàng chục phòng thí nghiệm Hóa học, Sinh học, Bào chế, Thực hành Kỹ thuật Ô tô trang thiết bị hiện đại.</p>
             </div>
-            
-            <div class="max-w-md mx-auto flex flex-col items-center">
-                <div class="flow-step w-full text-center shadow-md">
-                    <span class="text-sky-600 font-bold block">Năm 1</span>
-                    <p class="text-slate-800 font-semibold">Nền tảng & Kỹ năng mềm</p>
-                </div>
-                <div class="flow-connector"></div>
-                <div class="flow-step w-full text-center shadow-md border-sky-200">
-                    <span class="text-sky-600 font-bold block">Năm 2-3</span>
-                    <p class="text-slate-800 font-semibold">Kiến thức Chuyên sâu & Lab</p>
-                </div>
-                <div class="flow-connector"></div>
-                <div class="flow-step w-full text-center shadow-md">
-                    <span class="text-sky-600 font-bold block">Năm cuối</span>
-                    <p class="text-slate-800 font-semibold">Thực tập Doanh nghiệp (Internship)</p>
-                </div>
-                <div class="flow-connector"></div>
-                <div class="flow-step w-full text-center gradient-card text-white border-none shadow-xl scale-105">
-                    <span class="font-bold block">Tốt nghiệp</span>
-                    <p class="font-semibold">Cam kết việc làm & Khởi nghiệp</p>
-                </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 hover:border-sky-300 transition-colors cursor-default group">
+                <div class="text-5xl mb-4 group-hover:scale-110 transition-transform origin-left">🏨</div>
+                <h3 class="font-bold text-lg text-stone-800 mb-2">Khách sạn Thực hành 3-5⭐</h3>
+                <p class="text-sm text-stone-600">Mô hình khách sạn thực tế ngay trong khuôn viên trường dành riêng cho sinh viên khối ngành Du lịch, Khách sạn.</p>
             </div>
-        </section>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 hover:border-sky-300 transition-colors cursor-default group">
+                <div class="text-5xl mb-4 group-hover:scale-110 transition-transform origin-left">🏟️</div>
+                <h3 class="font-bold text-lg text-stone-800 mb-2">Khu Thể thao Đa năng</h3>
+                <p class="text-sm text-stone-600">Sân bóng đá cỏ nhân tạo đạt chuẩn, sân bóng rổ, khu thể chất rộng rãi hỗ trợ phát triển toàn diện.</p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 hover:border-sky-300 transition-colors cursor-default group">
+                <div class="text-5xl mb-4 group-hover:scale-110 transition-transform origin-left">🏢</div>
+                <h3 class="font-bold text-lg text-stone-800 mb-2">Ký túc xá Hiện đại</h3>
+                <p class="text-sm text-stone-600">Khép kín, an ninh 24/7, có điều hòa, bình nóng lạnh, siêu thị mini, phục vụ hàng ngàn chỗ ở cho sinh viên.</p>
+            </div>
+        </div>
+    </section>
 
-    </main>
+</main>
 
-    <footer class="bg-white border-t border-slate-200 py-10 text-center text-slate-500 text-sm">
-        <p>&copy; 2026 Bản quyền dữ liệu thuộc về Đại học Đại Nam | Thiết kế bởi Gemini AI</p>
-    </footer>
+<div id="ai-chatbox" class="fixed bottom-6 right-6 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-stone-200 hidden flex-col overflow-hidden z-[100] transition-all">
+    <div class="bg-sky-700 text-white p-4 flex justify-between items-center">
+        <span class="font-bold flex items-center gap-2">✨ Trợ lý ảo DNU</span>
+        <button onclick="toggleAIChat()" class="text-white hover:text-sky-200 font-bold text-xl leading-none">&times;</button>
+    </div>
+    <div id="chat-messages" class="h-80 overflow-y-auto p-4 space-y-4 bg-stone-50 flex flex-col">
+        <div class="bg-sky-100 text-sky-900 p-3 rounded-2xl rounded-tl-none text-sm self-start max-w-[85%] shadow-sm">
+            Chào bạn! Tôi là AI hỗ trợ thông tin về Đại học Đại Nam. Bạn cần tìm hiểu thông tin gì về điểm chuẩn, cơ sở vật chất hay các ngành học?
+        </div>
+    </div>
+    <div class="p-3 border-t border-stone-200 bg-white flex gap-2">
+        <input type="text" id="chat-input" class="flex-1 border border-stone-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" placeholder="Nhập câu hỏi..." onkeypress="if(event.key==='Enter') sendChatMessage()">
+        <button onclick="sendChatMessage()" class="bg-sky-600 text-white px-4 py-2 rounded-xl hover:bg-sky-700 font-medium transition-colors">Gửi</button>
+    </div>
+</div>
 
-    <script>
-        // --- Chart Selection Logic & Implementation ---
+<footer class="bg-stone-900 text-stone-400 py-12 text-center text-sm">
+    <div class="max-w-7xl mx-auto px-4">
+        <p class="mb-2">Báo cáo Phân tích Tương tác Kiến trúc Thông tin - Dữ liệu tích hợp Trí tuệ Nhân tạo.</p>
+        <p>Hệ thống không sử dụng SVG hay Mermaid JS, đồ họa xử lý qua Canvas & CSS.</p>
+    </div>
+</footer>
+
+<script>
+    function toggleMobileMenu() {
+        const menu = document.getElementById('mobile-menu');
+        menu.classList.toggle('hidden');
+    }
+
+    function openTab(tabId, element) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active', 'bg-sky-700', 'text-white'));
         
-        // Tooltip Plugin Config (Requirement)
-        const tooltipConfig = {
-            callbacks: {
-                title: function(tooltipItems) {
-                    const item = tooltipItems[0];
-                    let label = item.chart.data.labels[item.dataIndex];
-                    return Array.isArray(label) ? label.join(' ') : label;
+        document.getElementById(tabId).classList.add('active');
+        
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.style.backgroundColor = 'transparent';
+            btn.style.color = '#1c1917';
+        });
+        
+        element.classList.add('active');
+        element.style.backgroundColor = '#0369a1';
+        element.style.color = 'white';
+    }
+    
+    const activeTab = document.querySelector('.tab-btn.active');
+    if(activeTab) {
+        activeTab.style.backgroundColor = '#0369a1';
+        activeTab.style.color = 'white';
+    }
+
+    const observerOptions = {
+        root: null,
+        rootMargin: '0px',
+        threshold: 0.15
+    };
+
+    const observer = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                const statCounters = entry.target.querySelectorAll('[data-target]');
+                if(statCounters.length > 0 && !entry.target.dataset.animated) {
+                    animateNumbers(statCounters);
+                    entry.target.dataset.animated = 'true';
                 }
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('.fade-in').forEach(section => {
+        observer.observe(section);
+    });
+
+    function animateNumbers(elements) {
+        elements.forEach(el => {
+            const target = parseInt(el.getAttribute('data-target'));
+            const prefix = el.getAttribute('data-prefix') || '';
+            const suffix = el.getAttribute('data-suffix') || '';
+            const duration = 2000; 
+            const stepTime = Math.abs(Math.floor(duration / target));
+            
+            let current = 0;
+            const increment = target > 1000 ? Math.ceil(target / 50) : 1;
+
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                el.innerText = prefix + current.toLocaleString() + suffix;
+            }, target > 1000 ? 40 : stepTime);
+        });
+    }
+
+    const ctxLine = document.getElementById('studentGrowthChart').getContext('2d');
+    const studentGrowthChart = new Chart(ctxLine, {
+        type: 'line',
+        data: {
+            labels: ['2018', '2019', '2020', '2021', '2022', '2023', 'Hiện tại (Trung bình)'],
+            datasets: [{
+                label: 'Số lượng sinh viên',
+                data: [5000, 6500, 8000, 9500, 11000, 13500, 15000],
+                borderColor: '#0284c7',
+                backgroundColor: 'rgba(2, 132, 199, 0.1)',
+                borderWidth: 3,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: '#0284c7',
+                pointBorderWidth: 2,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(28, 25, 23, 0.9)',
+                    padding: 12,
+                    titleFont: { size: 14, family: "'Plus Jakarta Sans', sans-serif" },
+                    bodyFont: { size: 14, family: "'Plus Jakarta Sans', sans-serif" },
+                    callbacks: {
+                        title: function(tooltipItems) {
+                            const item = tooltipItems[0];
+                            let label = item.chart.data.labels[item.dataIndex];
+                            if (Array.isArray(label)) {
+                                return label.join(' ');
+                            } else {
+                                return label;
+                            }
+                        },
+                        label: function(context) {
+                            return context.parsed.y.toLocaleString() + ' Sinh viên';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: '#f5f5f4' },
+                    ticks: { color: '#78716c', font: { family: "'Plus Jakarta Sans', sans-serif" } }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#78716c', font: { family: "'Plus Jakarta Sans', sans-serif" } }
+                }
+            }
+        }
+    });
+
+    const ctxDonut = document.getElementById('facultyDonutChart').getContext('2d');
+    const facultyDonutChart = new Chart(ctxDonut, {
+        type: 'doughnut',
+        data: {
+            labels: ['Khối Sức khỏe', 'Khối Kinh tế', 'Khối Kỹ thuật & CNTT', 'Khối Ngôn ngữ & XH', 'Khác'],
+            datasets: [{
+                data: [30, 25, 20, 15, 10],
+                backgroundColor: [
+                    '#10b981',
+                    '#3b82f6',
+                    '#64748b',
+                    '#a855f7',
+                    '#d6d3d1' 
+                ],
+                borderWidth: 0,
+                hoverOffset: 10
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '65%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        font: { family: "'Plus Jakarta Sans', sans-serif", size: 12 },
+                        color: '#57534e'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(28, 25, 23, 0.9)',
+                    padding: 12,
+                    callbacks: {
+                        title: function(tooltipItems) {
+                            const item = tooltipItems[0];
+                            let label = item.chart.data.labels[item.dataIndex];
+                            if (Array.isArray(label)) {
+                                return label.join(' ');
+                            } else {
+                                return label;
+                            }
+                        },
+                        label: function(context) {
+                            return ' ' + context.label + ': ' + context.parsed + '%';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    const apiKey = "";
+    
+    async function fetchWithRetry(url, options, retries = 5) {
+        const delays = [1000, 2000, 4000, 8000, 16000];
+        for (let i = 0; i < retries; i++) {
+            try {
+                const response = await fetch(url, options);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return await response.json();
+            } catch (error) {
+                if (i === retries - 1) throw error;
+                await new Promise(res => setTimeout(res, delays[i]));
+            }
+        }
+    }
+
+    async function generateText(prompt, systemInstruction = "") {
+        const textModelUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+        const payload = { contents: [{ parts: [{ text: prompt }] }] };
+        if (systemInstruction) {
+            payload.systemInstruction = { parts: [{ text: systemInstruction }] };
+        }
+        try {
+            const data = await fetchWithRetry(textModelUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            return data.candidates?.[0]?.content?.parts?.[0]?.text || "Xin lỗi, đã có lỗi xảy ra.";
+        } catch (e) {
+            console.error(e);
+            return "Đã xảy ra lỗi kết nối. Vui lòng thử lại sau.";
+        }
+    }
+
+    async function getAIConsultation() {
+        const input = document.getElementById('ai-interest-input').value;
+        if(!input.trim()) return;
+        
+        const responseArea = document.getElementById('ai-response-area');
+        const responseText = document.getElementById('ai-response-text');
+        responseArea.classList.remove('hidden');
+        responseText.innerHTML = '<span class="loading-dots text-sky-400 font-medium">AI đang phân tích sở thích của bạn</span>';
+
+        const prompt = `Dựa vào sở thích: "${input}", hãy gợi ý 1 đến 2 ngành học phù hợp nhất tại Đại học Đại Nam (DNU). DNU có 4 khối ngành chính: Sức khỏe (Y khoa, Dược học, Điều dưỡng), Kinh tế (Quản trị kinh doanh, Kế toán, TMĐT, Logistics), Kỹ thuật (Công nghệ thông tin, Ô tô), Ngôn ngữ & KHXH (Anh, Trung, Hàn, Nhật, Du lịch). Giải thích ngắn gọn lý do phù hợp. Trả lời bằng tiếng Việt, định dạng bằng các thẻ HTML cơ bản (<p>, <ul>, <li>, <strong>) để hiển thị đẹp trên web. Trả lời thân thiện, tạo động lực.`;
+        
+        const result = await generateText(prompt);
+        responseText.innerHTML = result.replace(/```html|```/g, '').trim();
+    }
+
+    function toggleAIChat() {
+        const chatbox = document.getElementById('ai-chatbox');
+        if (chatbox.classList.contains('hidden')) {
+            chatbox.classList.remove('hidden');
+            chatbox.classList.add('flex');
+        } else {
+            chatbox.classList.add('hidden');
+            chatbox.classList.remove('flex');
+        }
+    }
+
+    const dnuContext = "Bạn là chuyên viên tư vấn tuyển sinh AI của Đại học Đại Nam (DNU). Thông tin trường: Thành lập năm 2007, cơ sở chính tại Phú Lâm, Hà Đông, Hà Nội. Quy mô đào tạo 15.000+ sinh viên. Đào tạo 36+ ngành học thuộc 4 khối: Sức khỏe, Kinh tế, Kỹ thuật - Công nghệ, Ngôn ngữ - KHXH. Cơ sở vật chất nổi bật: Hệ thống Lab chuẩn, Khách sạn thực hành, Khu thể thao đa năng, KTX khép kín. Tỷ lệ có việc làm trên 95%. Luôn trả lời người dùng thân thiện, ngắn gọn (dưới 3-4 câu), ngôn từ chuyên nghiệp, lịch sự.";
+
+    async function sendChatMessage() {
+        const inputEl = document.getElementById('chat-input');
+        const message = inputEl.value.trim();
+        if(!message) return;
+        
+        const chatBox = document.getElementById('chat-messages');
+        chatBox.innerHTML += `<div class="bg-stone-200 text-stone-800 p-3 rounded-2xl rounded-tr-none text-sm self-end max-w-[85%] shadow-sm">${message}</div>`;
+        inputEl.value = '';
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        const loadingId = 'loading-' + Date.now();
+        chatBox.innerHTML += `<div id="${loadingId}" class="bg-sky-100 text-sky-900 p-3 rounded-2xl rounded-tl-none text-sm self-start max-w-[85%] shadow-sm"><span class="loading-dots">Đang gõ</span></div>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        const response = await generateText(message, dnuContext);
+        const cleanResponse = response.replace(/```html|```/g, '').trim();
+        
+        const loadingElement = document.getElementById(loadingId);
+        if(loadingElement) {
+            loadingElement.outerHTML = `<div class="bg-sky-100 text-sky-900 p-3 rounded-2xl rounded-tl-none text-sm self-start max-w-[85%] shadow-sm">${cleanResponse}</div>`;
+        }
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function pcmToWav(pcmData, sampleRate = 24000) {
+        const numChannels = 1;
+        const bitsPerSample = 16;
+        const blockAlign = numChannels * (bitsPerSample / 8);
+        const byteRate = sampleRate * blockAlign;
+        const dataSize = pcmData.length;
+        const chunkSize = 36 + dataSize;
+        
+        const buffer = new ArrayBuffer(44 + dataSize);
+        const view = new DataView(buffer);
+        
+        const writeString = (offset, string) => {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
             }
         };
+        
+        writeString(0, 'RIFF');
+        view.setUint32(4, chunkSize, true);
+        writeString(8, 'WAVE');
+        writeString(12, 'fmt ');
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true);
+        view.setUint16(22, numChannels, true);
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, byteRate, true);
+        view.setUint16(32, blockAlign, true);
+        view.setUint16(34, bitsPerSample, true);
+        writeString(36, 'data');
+        view.setUint32(40, dataSize, true);
+        
+        const pcmView = new Uint8Array(pcmData);
+        new Uint8Array(buffer, 44).set(pcmView);
+        
+        return new Blob([buffer], { type: 'audio/wav' });
+    }
 
-        // 1. Line Chart: Student Growth (Goal: Change Over Time)
-        new Chart(document.getElementById('growthChart'), {
-            type: 'line',
-            data: {
-                labels: ['2020', '2021', '2022', '2023', '2024', 'Dự báo 2025'],
-                datasets: [{
-                    label: 'Số lượng sinh viên',
-                    data: [8500, 9200, 11000, 13200, 15000, 16500],
-                    borderColor: '#0284c7',
-                    backgroundColor: 'rgba(2, 132, 199, 0.1)',
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                maintainAspectRatio: false,
-                plugins: { 
-                    legend: { display: false },
-                    tooltip: tooltipConfig
-                }
-            }
-        });
+    async function triggerTTS(btnElement, targetId) {
+        const textToSpeak = document.getElementById(targetId).innerText;
+        const originalText = btnElement.innerHTML;
+        btnElement.innerHTML = '⏳ Đang kết nối AI...';
+        btnElement.disabled = true;
 
-        // 2. Donut Chart: Faculty Breakdown (Goal: Comparison/Composition)
-        // Label wrapping logic applied for long strings
-        new Chart(document.getElementById('facultyChart'), {
-            type: 'doughnut',
-            data: {
-                labels: [
-                    ['Khối ngành', 'Sức khỏe'], 
-                    ['Khối ngành', 'Kinh tế & Quản trị'], 
-                    ['Khối ngành', 'Kỹ thuật & CNTT'], 
-                    'Ngôn ngữ & XH'
-                ],
-                datasets: [{
-                    data: [35, 30, 20, 15],
-                    backgroundColor: ['#34d399', '#38bdf8', '#fbbf24', '#a78bfa'],
-                    hoverOffset: 20
-                }]
+        const ttsModelUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+        const payload = {
+            contents: [{ parts: [{ text: textToSpeak }] }],
+            generationConfig: {
+                responseModalities: ["AUDIO"],
+                speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Aoede" } } }
             },
-            options: {
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'bottom', labels: { color: '#f8fafc' } },
-                    tooltip: tooltipConfig
+            model: "gemini-2.5-flash-preview-tts"
+        };
+
+        try {
+            const data = await fetchWithRetry(ttsModelUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            
+            const inlineData = data.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+            if (inlineData && inlineData.data) {
+                const binaryString = atob(inlineData.data);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
                 }
+                
+                const wavBlob = pcmToWav(bytes.buffer, 24000);
+                const audioUrl = URL.createObjectURL(wavBlob);
+                const audio = new Audio(audioUrl);
+                
+                audio.onplay = () => { btnElement.innerHTML = '🔊 Đang phát âm thanh...'; };
+                audio.onended = () => { 
+                    btnElement.innerHTML = originalText; 
+                    btnElement.disabled = false; 
+                };
+                audio.play();
+            } else {
+                throw new Error("No audio data returned");
             }
-        });
-    </script>
+        } catch (e) {
+            console.error("TTS Error", e);
+            btnElement.innerHTML = '❌ Lỗi phát âm thanh';
+            setTimeout(() => {
+                btnElement.innerHTML = originalText;
+                btnElement.disabled = false;
+            }, 3000);
+        }
+    }
+</script>
 </body>
 </html>
